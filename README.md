@@ -1,7 +1,5 @@
 # The Language Machine
 
-> *Inspired by The Thinking Machine.*
-
 A full-stack language model system built from first principles — no `transformers`, no `torch.nn.Transformer`. Every component, from the attention kernel to the optimizer to the BPE algorithm, is implemented from scratch.
 
 The system spans three layers: a **core** model library, a **training infrastructure** with scheduling and checkpointing, and an **experimentation stack** for launching, monitoring, and comparing runs through a live dashboard.
