@@ -1,0 +1,13 @@
+{
+  "lsp": {
+    "pyright": {
+      "settings": {
+        "python": {
+          "pythonPath": "/opt/miniconda3/envs/cs336/bin/python",
+          "venvPath": "/opt/miniconda3/envs",
+          "venv": "cs336",
+        },
+      },
+    },
+  },
+}
