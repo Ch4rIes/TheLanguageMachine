@@ -1,6 +1,0 @@
-Encoding data/tinystories_train.txt → data/tinystories_train.bin
-  Tokenizer: tokenizers/tinystories_10k.json (10000 tokens)
-  0.0%  (73,394 tokens so far)
-  0.0%  (146,709 tokens so far)
-  0.0%  (219,937 tokens so far)
-  0.0%  (293,161 tokens so far)
