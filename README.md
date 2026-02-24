@@ -1,51 +1,86 @@
 # The Language Machine
 
-A full-stack language model system built from scratch — covering transformer architecture, training infrastructure, tokenization, and an experimentation dashboard.
+> *Inspired by The Thinking Machine.*
 
-## Structure
+A full-stack language model system built from first principles — no `transformers`, no `torch.nn.Transformer`. Every component, from the attention kernel to the optimizer to the BPE algorithm, is implemented from scratch.
+
+The system spans three layers: a **core** model library, a **training infrastructure** with scheduling and checkpointing, and an **experimentation stack** for launching, monitoring, and comparing runs through a live dashboard.
+
+---
+
+## Architecture
 
 ```
-.
-├── assignment1-basics/   # Core model implementation
-└── dashboard/            # Experimentation & monitoring stack
+language-machine/
+├── core/               # Model library & training engine
+└── infrastructure/     # Experimentation & monitoring stack
 ```
 
-### `assignment1-basics/` — Model Core
+---
 
-The `language_machine` Python package implements every component from first principles:
+## `core/` — Model Library
 
-- **Transformer** — multi-head attention (with RoPE), RMSNorm, SwiGLU feed-forward, full transformer LM
-- **Tokenizer** — BPE tokenizer with parallel pre-tokenization (`tokenizer/`)
-- **Training utilities** — AdamW optimizer, cosine LR schedule, gradient clipping, checkpointing, data loader
-- **Training loop** — end-to-end training with W&B logging and SLURM/submitit support
-- **Generation** — autoregressive text generation with temperature/top-k sampling
+The `language_machine` Python package. Every layer is hand-rolled.
 
-#### Setup
+### Transformer
+- Multi-head self-attention with **Rotary Positional Embeddings (RoPE)**
+- **RMSNorm** for pre-normalization
+- **SwiGLU** position-wise feed-forward network
+- Full autoregressive **TransformerLM**
+
+### Tokenizer
+- **Byte-Pair Encoding (BPE)** trained from scratch
+- Parallel pre-tokenization across file chunks
+- CLI for training, encoding, decoding, and inspection
+
+### Training Infrastructure
+- **AdamW** optimizer with decoupled weight decay
+- **Cosine annealing** LR schedule with linear warmup
+- Gradient norm clipping
+- Distributed checkpointing (save/resume)
+- Streaming data loader for memory-efficient training
+- **W&B** integration and **SLURM/submitit** support for cluster jobs
+
+### Setup
 
 Requires [`uv`](https://github.com/astral-sh/uv).
 
 ```sh
-cd assignment1-basics
-uv run pytest          # run tests
+cd core
+uv run pytest                                        # run test suite
 uv run python -m language_machine.tokenizer_cli --help
-uv run python -m language_machine.training_loop
+uv run python -m language_machine.training_loop      # train a model
 ```
 
-Data (TinyStories, OpenWebText sample) is not tracked — see `assignment1-basics/README.md` for download instructions.
+Training data (TinyStories, OpenWebText) is not tracked in git. See `core/README.md` for download instructions.
 
-### `dashboard/` — Experimentation Stack
+---
 
-A full-stack experiment management interface:
+## `infrastructure/` — Experimentation Stack
 
-- **Backend** — FastAPI server for launching/monitoring training runs, tokenization, and text generation
-- **Frontend** — React + TypeScript UI for experiment tracking and live metrics
-- **Process manager** — handles concurrent training job lifecycle
+A full-stack interface for managing training runs end to end.
+
+### Backend (FastAPI)
+- Launch and terminate training jobs
+- Stream live training metrics from log files
+- Tokenize text and run autoregressive generation against any checkpoint
+- Persistent experiment store with run history
+
+### Frontend (React + TypeScript)
+- Live loss curve visualization
+- Side-by-side experiment comparison
+- Checkpoint selector for generation
+- Tokenizer playground
+
+### Start
 
 ```sh
-cd dashboard
-./start.sh
+cd infrastructure
+./start.sh    # starts backend + frontend concurrently
 ```
 
-## Philosophy
+---
 
-Every component — from the attention kernel to the optimizer to the tokenization algorithm — is implemented from scratch. No `transformers`, no `torch.nn.Transformer`. Just tensors and math.
+## Design Philosophy
+
+The goal is full transparency across the stack. No black-box abstractions — if something runs, you can read exactly why. The architecture mirrors production LLM systems at a scale that fits on a single machine or a small cluster, making it a useful substrate for research and experimentation.

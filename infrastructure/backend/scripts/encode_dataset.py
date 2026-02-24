@@ -15,8 +15,8 @@ from pathlib import Path
 
 import numpy as np
 
-# Allow running from any directory by adding assignment1-basics to path
-ASSIGNMENT_DIR = Path(__file__).parent.parent.parent.parent / "assignment1-basics"
+# Allow running from any directory by adding core to path
+ASSIGNMENT_DIR = Path(__file__).parent.parent.parent.parent / "core"
 if str(ASSIGNMENT_DIR) not in sys.path:
     sys.path.insert(0, str(ASSIGNMENT_DIR))
 

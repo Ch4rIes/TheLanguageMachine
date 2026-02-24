@@ -1,14 +1,14 @@
 # TinyStories — MacBook Air M4 reference config
 #
-# Dataset setup (run once from assignment1-basics/):
+# Dataset setup (run once from core/):
 #   curl -L https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-train.txt -o data/tinystories_train.txt
 #   curl -L https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-valid.txt -o data/tinystories_val.txt
 #   python -m cs336_basics.tokenizer_cli train -i data/tinystories_train.txt -v 10000 -o tokenizers/tinystories_10k.json
 #   # (or use the pre-trained tokenizers/tinystories_10k.json)
-#   python dashboard/backend/scripts/encode_dataset.py \
+#   python infrastructure/backend/scripts/encode_dataset.py \
 #       --tokenizer tokenizers/tinystories_10k.json \
 #       --input data/tinystories_train.txt --output data/tinystories_train.bin
-#   python dashboard/backend/scripts/encode_dataset.py \
+#   python infrastructure/backend/scripts/encode_dataset.py \
 #       --tokenizer tokenizers/tinystories_10k.json \
 #       --input data/tinystories_val.txt --output data/tinystories_val.bin
 #

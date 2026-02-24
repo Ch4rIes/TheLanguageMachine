@@ -5,13 +5,13 @@ from pathlib import Path
 
 import torch
 
-ASSIGNMENT_DIR = Path(__file__).parent.parent.parent / "assignment1-basics"
+ASSIGNMENT_DIR = Path(__file__).parent.parent.parent / "core"
 
 _executor = ThreadPoolExecutor(max_workers=1)
 
 
 def _ensure_path() -> None:
-    """Add assignment1-basics to sys.path if needed."""
+    """Add core to sys.path if needed."""
     p = str(ASSIGNMENT_DIR)
     if p not in sys.path:
         sys.path.insert(0, p)

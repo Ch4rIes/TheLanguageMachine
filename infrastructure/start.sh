@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start the CS336 experiment dashboard (backend + frontend)
+# Start the The Language Machine infrastructure (backend + frontend)
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

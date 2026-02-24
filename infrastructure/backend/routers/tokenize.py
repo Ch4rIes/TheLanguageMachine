@@ -26,7 +26,7 @@ router = APIRouter(prefix="/tokenize")
 # ── path constants ──────────────────────────────────────────────────────────
 BACKEND_DIR = Path(__file__).parent.parent
 DASHBOARD_DIR = BACKEND_DIR.parent
-ASSIGNMENT_DIR = DASHBOARD_DIR.parent / "assignment1-basics"
+ASSIGNMENT_DIR = DASHBOARD_DIR.parent / "core"
 SCRIPTS_DIR = BACKEND_DIR / "scripts"
 LOGS_DIR = DASHBOARD_DIR / "data" / "logs" / "tokenize"
 CONFIGS_DIR = DASHBOARD_DIR / "configs"

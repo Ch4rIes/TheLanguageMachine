@@ -10,8 +10,8 @@ except ImportError:
     HAS_PSUTIL = False
 
 DATA_DIR = Path(__file__).parent.parent / "data"
-# Path to the assignment1-basics directory (parent of dashboard)
-ASSIGNMENT_DIR = Path(__file__).parent.parent.parent / "assignment1-basics"
+# Path to the core directory (parent of dashboard)
+ASSIGNMENT_DIR = Path(__file__).parent.parent.parent / "core"
 
 
 class SubprocessManager:
