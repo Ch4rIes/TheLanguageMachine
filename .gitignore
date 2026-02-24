@@ -1,0 +1,17 @@
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/.venv/
+**/.pytest_cache/
+**/.ruff_cache/
+*.egg-info/
+
+# Data artifacts
+dashboard/data/
+
+# Node
+dashboard/frontend/node_modules/
+dashboard/frontend/dist/
+
+# OS
+.DS_Store
