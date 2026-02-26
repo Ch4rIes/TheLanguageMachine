@@ -57,6 +57,7 @@ Training data (TinyStories, OpenWebText) is not tracked in git. See `core/README
 ## `infrastructure/` — Experimentation Stack
 
 A full-stack interface for managing training runs end to end.
+<img width="830" height="853" alt="PNG image" src="https://github.com/user-attachments/assets/77f043c1-349f-4b75-bc85-edc9734558bc" />
 
 ### Backend (FastAPI)
 - Launch and terminate training jobs
