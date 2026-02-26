@@ -39,6 +39,10 @@ The `language_machine` Python package. Every layer is hand-rolled.
 - Streaming data loader for memory-efficient training
 - **W&B** integration and **SLURM/submitit** support for cluster jobs
 
+### Demo LM
+<img width="1564" height="1114" alt="e5dbaf1db44bf950577613523833339e" src="https://github.com/user-attachments/assets/c67c38ce-b398-4519-b8d2-b72cb839612b" />
+
+
 ### Setup
 
 Requires [`uv`](https://github.com/astral-sh/uv).
