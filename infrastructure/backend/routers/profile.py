@@ -21,6 +21,15 @@ _runs_lock = threading.Lock()
 router = APIRouter()
 
 
+def _worker_payload(body: StepProfilerRequest) -> dict:
+    payload = body.model_dump()
+    if not body.nsight_enabled:
+        payload.pop("nsight_enabled", None)
+        payload.pop("nsight_mode", None)
+        payload.pop("nsight_output_dir", None)
+    return payload
+
+
 def _remote_profile(body: StepProfilerRequest) -> dict | None:
     runpod_endpoint_id = os.environ.get("RUNPOD_ENDPOINT_ID", "").strip()
     runpod_api_key = os.environ.get("RUNPOD_API_KEY", "").strip()
@@ -42,7 +51,7 @@ def _remote_profile(body: StepProfilerRequest) -> dict | None:
     token = os.environ.get("PROFILE_WORKER_TOKEN", "").strip()
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    payload = json.dumps(body.model_dump()).encode("utf-8")
+    payload = json.dumps(_worker_payload(body)).encode("utf-8")
     request = urllib.request.Request(
         url,
         data=payload,
@@ -67,7 +76,7 @@ def _runpod_profile(body: StepProfilerRequest, endpoint_id: str, api_key: str) -
     execution_timeout_ms = int(float(os.environ.get("RUNPOD_EXECUTION_TIMEOUT_MS", str(timeout * 1000))))
     url = f"https://api.runpod.ai/v2/{endpoint_id}/runsync"
     payload = {
-        "input": body.model_dump(),
+        "input": _worker_payload(body),
         "policy": {
             "executionTimeout": execution_timeout_ms,
             "ttl": max(execution_timeout_ms + 300000, 900000),
@@ -133,6 +142,7 @@ def _save_run(profile: dict) -> StepProfilerRun:
         config=profile["config"],
         hardware=profile["hardware"],
         results=profile["results"],
+        nsight=profile.get("nsight"),
     )
     with _runs_lock:
         data = _read_runs()
@@ -150,6 +160,7 @@ def profile_step(body: StepProfilerRequest):
                 "config": remote_profile["config"],
                 "hardware": remote_profile["hardware"],
                 "results": remote_profile["results"],
+                "nsight": remote_profile.get("nsight"),
             }
         )
 

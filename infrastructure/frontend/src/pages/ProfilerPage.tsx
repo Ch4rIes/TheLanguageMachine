@@ -39,6 +39,9 @@ const defaultProfile: StepProfilerRequest = {
   theta: 10000.0,
   lr: 1e-3,
   weight_decay: 0.01,
+  nsight_enabled: false,
+  nsight_mode: 'forward_backward_optimizer',
+  nsight_output_dir: '/tmp/language-machine-nsight',
 };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -126,6 +129,50 @@ function ResultsTable({ results }: { results: StepProfilerResult[] }) {
           </tbody>
         </table>
       </div>
+    </section>
+  );
+}
+
+function NsightBlock({ data }: { data: StepProfilerResponse }) {
+  const nsight = data.nsight;
+  if (!nsight?.enabled) return null;
+
+  return (
+    <section style={panelStyle}>
+      <h2 style={{ margin: '0 0 12px' }}>Nsight</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10 }}>
+        <div>
+          <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>Status</div>
+          <div style={{ fontSize: 14, color: '#111827' }}>{nsight.status ?? '—'}</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>Mode</div>
+          <div style={{ fontSize: 14, color: '#111827' }}>{nsight.mode ? formatMode(nsight.mode) : '—'}</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>Elapsed</div>
+          <div style={{ fontSize: 14, color: '#111827' }}>{nsight.elapsed_ms ? `${formatNumber(nsight.elapsed_ms)} ms` : '—'}</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>Output base</div>
+          <div style={{ fontSize: 14, color: '#111827', overflowWrap: 'anywhere' }}>{nsight.output_base ?? nsight.reason ?? '—'}</div>
+        </div>
+      </div>
+      {nsight.files && nsight.files.length > 0 && (
+        <div style={{ marginTop: 12 }}>
+          <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>Files</div>
+          <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: 13 }}>
+            {nsight.files.map((file) => (
+              <li key={file} style={{ overflowWrap: 'anywhere' }}>{file}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {(nsight.stderr_tail || nsight.stdout_tail) && (
+        <pre style={{ margin: '12px 0 0', padding: 10, background: '#f9fafb', borderRadius: 4, fontSize: 12, overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+          {nsight.stderr_tail || nsight.stdout_tail}
+        </pre>
+      )}
     </section>
   );
 }
@@ -244,7 +291,7 @@ export function ProfilerPage() {
     }
   }, [activeRun, runs]);
 
-  const setField = (key: keyof StepProfilerRequest, value: string | number) => {
+  const setField = (key: keyof StepProfilerRequest, value: string | number | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -309,6 +356,38 @@ export function ProfilerPage() {
           </Field>
         </div>
 
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12, alignItems: 'end' }}>
+          <label style={{ ...labelStyle, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <input
+              type="checkbox"
+              checked={form.nsight_enabled}
+              onChange={(e) => setField('nsight_enabled', e.target.checked)}
+            />
+            <span style={{ fontWeight: 600, color: '#374151' }}>Capture Nsight trace</span>
+          </label>
+          <Field label="Nsight mode">
+            <select
+              style={inputStyle}
+              value={form.nsight_mode}
+              disabled={!form.nsight_enabled}
+              onChange={(e) => setField('nsight_mode', e.target.value)}
+            >
+              <option value="forward">forward</option>
+              <option value="forward_backward">forward + backward</option>
+              <option value="forward_backward_optimizer">forward + backward + optimizer</option>
+            </select>
+          </Field>
+          <Field label="Nsight output dir">
+            <input
+              type="text"
+              style={inputStyle}
+              value={form.nsight_output_dir}
+              disabled={!form.nsight_enabled}
+              onChange={(e) => setField('nsight_output_dir', e.target.value)}
+            />
+          </Field>
+        </div>
+
         <button
           type="submit"
           disabled={mutation.isPending}
@@ -345,7 +424,7 @@ export function ProfilerPage() {
         activeId={activeRun?.id}
         onView={setActiveRun}
         onLoadConfig={(run) => {
-          setForm(run.config);
+          setForm({ ...defaultProfile, ...run.config });
           setActiveRun(run);
         }}
       />
@@ -354,6 +433,7 @@ export function ProfilerPage() {
         <>
           <HardwareBlock data={activeRun} />
           <ResultsTable results={activeRun.results} />
+          <NsightBlock data={activeRun} />
         </>
       )}
     </div>

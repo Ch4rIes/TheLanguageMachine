@@ -90,6 +90,9 @@ export interface StepProfilerRequest {
   theta: number;
   lr: number;
   weight_decay: number;
+  nsight_enabled: boolean;
+  nsight_mode: 'forward' | 'forward_backward' | 'forward_backward_optimizer';
+  nsight_output_dir: string;
 }
 
 export interface StepProfilerResult {
@@ -135,6 +138,19 @@ export interface StepProfilerResponse {
     } | null;
   };
   results: StepProfilerResult[];
+  nsight?: {
+    enabled: boolean;
+    tool?: string;
+    mode?: StepProfilerResult['mode'];
+    status?: string;
+    reason?: string;
+    returncode?: number;
+    elapsed_ms?: number;
+    output_base?: string;
+    files?: string[];
+    stdout_tail?: string;
+    stderr_tail?: string;
+  } | null;
 }
 
 export interface StepProfilerRun extends StepProfilerResponse {

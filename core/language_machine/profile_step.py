@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import json
 import platform
+import shutil
 import statistics
+import subprocess
 import time
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any, Literal
 
 import psutil
@@ -31,6 +35,9 @@ class StepProfileConfig:
     theta: float = 10000.0
     lr: float = 1e-3
     weight_decay: float = 0.01
+    nsight_enabled: bool = False
+    nsight_mode: ProfileMode = "forward_backward_optimizer"
+    nsight_output_dir: str = "/tmp/language-machine-nsight"
 
 
 def _synchronize(device: str) -> None:
@@ -144,21 +151,28 @@ def _run_step(
     inputs: torch.Tensor,
     targets: torch.Tensor,
 ) -> float | None:
-    optimizer.zero_grad(set_to_none=True)
+    use_nvtx = inputs.device.type == "cuda" and torch.cuda.is_available()
+    if use_nvtx:
+        torch.cuda.nvtx.range_push(mode)
+    try:
+        optimizer.zero_grad(set_to_none=True)
 
-    if mode == "forward":
-        with torch.no_grad():
-            model(inputs)
-        return None
+        if mode == "forward":
+            with torch.no_grad():
+                model(inputs)
+            return None
 
-    logits = model(inputs)
-    loss = cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1))
-    loss.backward()
+        logits = model(inputs)
+        loss = cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1))
+        loss.backward()
 
-    if mode == "forward_backward_optimizer":
-        optimizer.step()
+        if mode == "forward_backward_optimizer":
+            optimizer.step()
 
-    return float(loss.item())
+        return float(loss.item())
+    finally:
+        if use_nvtx:
+            torch.cuda.nvtx.range_pop()
 
 
 def _summarize(times_ms: list[float], tokens_per_step: int) -> dict[str, float]:
@@ -216,6 +230,87 @@ def profile_mode(config: StepProfileConfig, mode: ProfileMode) -> dict[str, Any]
     return result
 
 
+def _run_nsight_capture(config: StepProfileConfig) -> dict[str, Any]:
+    if not config.device.startswith("cuda"):
+        return {
+            "enabled": True,
+            "status": "skipped",
+            "reason": "Nsight capture requires a CUDA device",
+        }
+
+    nsys = shutil.which("nsys")
+    if nsys is None:
+        return {
+            "enabled": True,
+            "status": "unavailable",
+            "reason": "nsys was not found in PATH",
+        }
+
+    output_dir = Path(config.nsight_output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    base_name = f"profile-{config.nsight_mode}-{stamp}"
+    output_base = output_dir / base_name
+    config_path = output_dir / f"{base_name}.json"
+
+    runner_config = asdict(config)
+    runner_config["nsight_enabled"] = False
+    config_path.write_text(json.dumps(runner_config))
+
+    cmd = [
+        nsys,
+        "profile",
+        "--force-overwrite=true",
+        "--trace=cuda,nvtx,cudnn,cublas,osrt",
+        "--sample=none",
+        "--output",
+        str(output_base),
+        "python",
+        "-m",
+        "language_machine.nsight_runner",
+        "--config",
+        str(config_path),
+        "--mode",
+        config.nsight_mode,
+    ]
+    started = time.perf_counter()
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=900, check=False)
+    except subprocess.TimeoutExpired as exc:
+        elapsed_ms = (time.perf_counter() - started) * 1000
+        files = sorted(str(path) for path in output_dir.glob(f"{base_name}*"))
+        stdout = exc.stdout.decode("utf-8", errors="replace") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
+        stderr = exc.stderr.decode("utf-8", errors="replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+        return {
+            "enabled": True,
+            "tool": "nsys",
+            "mode": config.nsight_mode,
+            "status": "timeout",
+            "elapsed_ms": elapsed_ms,
+            "command": cmd,
+            "output_base": str(output_base),
+            "files": files,
+            "stdout_tail": stdout[-4000:],
+            "stderr_tail": stderr[-4000:],
+        }
+    elapsed_ms = (time.perf_counter() - started) * 1000
+    files = sorted(str(path) for path in output_dir.glob(f"{base_name}*"))
+
+    return {
+        "enabled": True,
+        "tool": "nsys",
+        "mode": config.nsight_mode,
+        "status": "ok" if proc.returncode == 0 else "failed",
+        "returncode": proc.returncode,
+        "elapsed_ms": elapsed_ms,
+        "command": cmd,
+        "output_base": str(output_base),
+        "files": files,
+        "stdout_tail": proc.stdout[-4000:],
+        "stderr_tail": proc.stderr[-4000:],
+    }
+
+
 def run_step_profile(config: StepProfileConfig) -> dict[str, Any]:
     if config.d_model % config.num_heads != 0:
         raise ValueError("d_model must be divisible by num_heads")
@@ -223,12 +318,18 @@ def run_step_profile(config: StepProfileConfig) -> dict[str, Any]:
         raise ValueError("batch_size and context_length must be positive")
     if config.warmup_steps < 0 or config.profile_steps < 1:
         raise ValueError("warmup_steps must be >= 0 and profile_steps must be >= 1")
+    if config.nsight_mode not in {"forward", "forward_backward", "forward_backward_optimizer"}:
+        raise ValueError("nsight_mode must be forward, forward_backward, or forward_backward_optimizer")
 
     modes: list[ProfileMode] = ["forward", "forward_backward", "forward_backward_optimizer"]
     results = [profile_mode(config, mode) for mode in modes]
 
-    return {
+    profile = {
         "config": asdict(config),
         "hardware": collect_hardware(config.device),
         "results": results,
     }
+    if config.nsight_enabled:
+        profile["nsight"] = _run_nsight_capture(config)
+
+    return profile

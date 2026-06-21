@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel
 
@@ -98,6 +98,9 @@ class StepProfilerRequest(BaseModel):
     theta: float = 10000.0
     lr: float = 1e-3
     weight_decay: float = 0.01
+    nsight_enabled: bool = False
+    nsight_mode: Literal["forward", "forward_backward", "forward_backward_optimizer"] = "forward_backward_optimizer"
+    nsight_output_dir: str = "/tmp/language-machine-nsight"
 
 
 class StepProfilerRun(BaseModel):
@@ -106,3 +109,4 @@ class StepProfilerRun(BaseModel):
     config: Dict[str, Any]
     hardware: Dict[str, Any]
     results: List[Dict[str, Any]]
+    nsight: Optional[Dict[str, Any]] = None
