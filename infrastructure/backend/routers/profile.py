@@ -34,7 +34,11 @@ def _remote_profile(body: StepProfilerRequest) -> dict | None:
     timeout = float(os.environ.get("PROFILE_WORKER_TIMEOUT", "600"))
     endpoint = "/profile/step" if worker_url.endswith("/api") else "/api/profile/step"
     url = f"{worker_url}{endpoint}"
-    headers = {"Content-Type": "application/json"}
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "language-machine-dashboard/1.0",
+    }
     token = os.environ.get("PROFILE_WORKER_TOKEN", "").strip()
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -75,6 +79,8 @@ def _runpod_profile(body: StepProfilerRequest, endpoint_id: str, api_key: str) -
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "language-machine-dashboard/1.0",
         },
         method="POST",
     )
