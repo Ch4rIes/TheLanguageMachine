@@ -6,6 +6,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$SCRIPT_DIR/backend"
 FRONTEND_DIR="$SCRIPT_DIR/frontend"
 
+: "${PROFILE_WORKER_URL:=https://lsstw5krsh34xp-8080.proxy.runpod.net}"
+: "${PROFILE_WORKER_TIMEOUT:=900}"
+export PROFILE_WORKER_URL PROFILE_WORKER_TIMEOUT
+
 echo "=== CS336 Experiment Dashboard ==="
 echo ""
 
@@ -17,6 +21,7 @@ fi
 
 # Start backend
 echo "[backend] Starting FastAPI on http://localhost:8000 ..."
+echo "[backend] Profiler worker: $PROFILE_WORKER_URL"
 cd "$BACKEND_DIR"
 uvicorn main:app --reload --port 8000 &
 BACKEND_PID=$!

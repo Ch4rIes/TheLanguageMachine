@@ -24,7 +24,7 @@ router = APIRouter()
 def _remote_profile(body: StepProfilerRequest) -> dict | None:
     runpod_endpoint_id = os.environ.get("RUNPOD_ENDPOINT_ID", "").strip()
     runpod_api_key = os.environ.get("RUNPOD_API_KEY", "").strip()
-    if runpod_endpoint_id or runpod_api_key:
+    if runpod_endpoint_id and runpod_api_key:
         return _runpod_profile(body, runpod_endpoint_id, runpod_api_key)
 
     worker_url = os.environ.get("PROFILE_WORKER_URL", "").strip().rstrip("/")
