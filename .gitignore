@@ -6,12 +6,17 @@
 **/.ruff_cache/
 *.egg-info/
 
-# Data artifacts
-dashboard/data/
+# Runtime state — experiments, logs, metrics, checkpoints
+infrastructure/data/
+
+# Core data artifacts — training corpora, tokenizers
+core/data/
+core/tokenizers/
+core/**.pdf
 
 # Node
-dashboard/frontend/node_modules/
-dashboard/frontend/dist/
+infrastructure/frontend/node_modules/
+infrastructure/frontend/dist/
 
 # OS
 .DS_Store
