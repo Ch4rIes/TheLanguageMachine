@@ -43,19 +43,27 @@ def _run_inference(
     ckpt = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     model_state = ckpt["model_state_dict"]
 
+    vocab, merges = _load_tokenizer(tokenizer_path)
+    tokenizer_vocab_size = len(vocab)
+
     # Infer model hyperparams from state dict shapes
-    embed_w = model_state["token_embedding.weight"]
-    vocab_size, d_model = embed_w.shape
+    embed_w = model_state["embedding_layer.W"]
+    ckpt_vocab_size, d_model = embed_w.shape
+
+    # If the checkpoint vocab is larger than the tokenizer (e.g. config defaulted to
+    # 32000 but tokenizer only has 10000 tokens), truncate so generation stays in range.
+    if ckpt_vocab_size != tokenizer_vocab_size:
+        model_state["embedding_layer.W"] = model_state["embedding_layer.W"][:tokenizer_vocab_size]
+        model_state["lm_head.W"] = model_state["lm_head.W"][:, :tokenizer_vocab_size]
+    vocab_size = tokenizer_vocab_size
 
     num_layers = sum(
-        1 for k in model_state if k.startswith("layers.") and k.endswith(".ln1.weight")
+        1 for k in model_state if k.startswith("transformer_blocks.") and k.endswith(".norm1.weight")
     )
 
     num_heads = ckpt.get("num_heads", max(1, d_model // 64))
 
-    d_ff_key = "layers.0.ffn.w1.weight"
-    d_ff = model_state[d_ff_key].shape[0] if d_ff_key in model_state else d_model * 4
-
+    # d_ff is ignored by SwiGLUFeedForward (it recomputes from d_model), so any value works
     context_length = ckpt.get("context_length", 256)
 
     model = TransformerLM(
@@ -64,13 +72,11 @@ def _run_inference(
         num_layers=num_layers,
         d_model=d_model,
         num_heads=num_heads,
-        d_ff=d_ff,
+        d_ff=0,
     )
     model.load_state_dict(model_state)
     model.context_length = context_length
     model.eval()
-
-    vocab, merges = _load_tokenizer(tokenizer_path)
 
     return generate_text(
         model=model,

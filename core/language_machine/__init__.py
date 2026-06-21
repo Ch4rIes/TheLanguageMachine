@@ -1,3 +1,6 @@
 import importlib.metadata
 
-__version__ = importlib.metadata.version("language_machine")
+try:
+    __version__ = importlib.metadata.version("language_machine")
+except importlib.metadata.PackageNotFoundError:
+    __version__ = "0.0.0.dev"

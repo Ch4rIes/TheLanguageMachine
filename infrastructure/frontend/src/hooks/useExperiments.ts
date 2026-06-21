@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { experimentsApi } from '../api';
-import type { ExperimentCreate } from '../types';
+import type { ExperimentCreate, ExperimentRecord } from '../types';
 
 export function useExperiments() {
   return useQuery({
@@ -48,6 +48,15 @@ export function useStopExperiment() {
   return useMutation({
     mutationFn: (id: string) => experimentsApi.stop(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['experiments'] }),
+  });
+}
+
+export function useUpdateExperiment(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Partial<Pick<ExperimentRecord, 'name' | 'train_data_path' | 'val_data_path' | 'tokenizer_path' | 'device'>>) =>
+      experimentsApi.patch(id, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['experiments', id] }),
   });
 }
 

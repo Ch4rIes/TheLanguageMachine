@@ -6,7 +6,7 @@ from typing import List
 import yaml
 from fastapi import APIRouter, HTTPException, Request
 
-from models import ExperimentCreate, ExperimentRecord
+from models import ExperimentCreate, ExperimentRecord, ExperimentPatch
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
 
@@ -76,6 +76,19 @@ def get_experiment(exp_id: str, request: Request):
     rec = _store(request).get(exp_id)
     if not rec:
         raise HTTPException(status_code=404, detail="Not found")
+    return rec
+
+
+@router.patch("/experiments/{exp_id}", response_model=ExperimentRecord)
+def patch_experiment(exp_id: str, body: ExperimentPatch, request: Request):
+    rec = _store(request).get(exp_id)
+    if not rec:
+        raise HTTPException(status_code=404, detail="Not found")
+    if rec.status == "running":
+        raise HTTPException(status_code=409, detail="Cannot edit a running experiment")
+    for field, value in body.model_dump(exclude_none=True).items():
+        setattr(rec, field, value)
+    _store(request).save(rec)
     return rec
 
 

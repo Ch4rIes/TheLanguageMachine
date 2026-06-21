@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -55,6 +55,14 @@ class ExperimentRecord(ExperimentCreate):
     checkpoint_dir: str = ""
 
 
+class ExperimentPatch(BaseModel):
+    name: Optional[str] = None
+    train_data_path: Optional[str] = None
+    val_data_path: Optional[str] = None
+    tokenizer_path: Optional[str] = None
+    device: Optional[str] = None
+
+
 class MetricPoint(BaseModel):
     iteration: int
     train_loss: Optional[float] = None
@@ -74,3 +82,27 @@ class GenerateRequest(BaseModel):
 
 class GenerateResponse(BaseModel):
     text: str
+
+
+class StepProfilerRequest(BaseModel):
+    device: str = "cpu"
+    batch_size: int = 8
+    warmup_steps: int = 5
+    profile_steps: int = 20
+    vocab_size: int = 10000
+    context_length: int = 128
+    num_layers: int = 4
+    d_model: int = 256
+    num_heads: int = 4
+    d_ff: int = 1024
+    theta: float = 10000.0
+    lr: float = 1e-3
+    weight_decay: float = 0.01
+
+
+class StepProfilerRun(BaseModel):
+    id: str
+    created_at: float
+    config: Dict[str, Any]
+    hardware: Dict[str, Any]
+    results: List[Dict[str, Any]]

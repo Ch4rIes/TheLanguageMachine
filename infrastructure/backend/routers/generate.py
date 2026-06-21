@@ -1,7 +1,12 @@
+import logging
+import traceback
+
 from fastapi import APIRouter, HTTPException, Request
 
 from generate_worker import generate_async
 from models import GenerateRequest, GenerateResponse
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -30,6 +35,7 @@ async def generate(body: GenerateRequest, request: Request):
             top_p=body.top_p,
         )
     except Exception as exc:
+        logger.error("generate failed:\n%s", traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(exc))
 
     return GenerateResponse(text=text)

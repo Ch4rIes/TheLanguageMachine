@@ -75,3 +75,69 @@ export interface GenerateRequest {
 export interface GenerateResponse {
   text: string;
 }
+
+export interface StepProfilerRequest {
+  device: string;
+  batch_size: number;
+  warmup_steps: number;
+  profile_steps: number;
+  vocab_size: number;
+  context_length: number;
+  num_layers: number;
+  d_model: number;
+  num_heads: number;
+  d_ff: number;
+  theta: number;
+  lr: number;
+  weight_decay: number;
+}
+
+export interface StepProfilerResult {
+  mode: 'forward' | 'forward_backward' | 'forward_backward_optimizer';
+  steps: number;
+  parameter_count: number;
+  tokens_per_step: number;
+  mean_ms: number;
+  p50_ms: number;
+  p95_ms: number;
+  min_ms: number;
+  max_ms: number;
+  tokens_per_sec: number;
+  allocated_mb?: number | null;
+  reserved_mb?: number | null;
+  peak_allocated_mb?: number | null;
+  peak_reserved_mb?: number | null;
+  last_loss?: number;
+}
+
+export interface StepProfilerResponse {
+  config: StepProfilerRequest;
+  hardware: {
+    platform: string;
+    machine: string;
+    python: string;
+    torch: string;
+    device: string;
+    cpu: {
+      model: string;
+      physical_cores?: number | null;
+      logical_cores?: number | null;
+      memory_gb: number;
+    };
+    gpu?: {
+      backend: string;
+      name: string;
+      index?: number;
+      total_memory_mb?: number | null;
+      cuda_version?: string | null;
+      capability?: string | null;
+      multi_processor_count?: number;
+    } | null;
+  };
+  results: StepProfilerResult[];
+}
+
+export interface StepProfilerRun extends StepProfilerResponse {
+  id: string;
+  created_at: number;
+}

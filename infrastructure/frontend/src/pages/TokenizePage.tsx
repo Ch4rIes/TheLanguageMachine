@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { tokenizeApi } from '../api/tokenize';
 import type { TokenizeTask } from '../api/tokenize';
@@ -44,7 +44,7 @@ function TaskLog({ task }: { task: TokenizeTask }) {
     queryKey: ['tok-task', task.id],
     queryFn: () => tokenizeApi.getTask(task.id),
     refetchInterval: task.status === 'running' ? 2000 : false,
-    onSuccess: (t) => {
+    onSuccess: (t: TokenizeTask) => {
       if (t.status !== task.status) {
         qc.invalidateQueries({ queryKey: ['tok-tasks'] });
       }

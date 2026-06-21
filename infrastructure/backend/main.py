@@ -30,12 +30,13 @@ app.add_middleware(
 app.state.store = store
 app.state.proc_manager = proc_manager
 
-from routers import experiments, generate, metrics, tokenize  # noqa: E402
+from routers import experiments, generate, metrics, profile, tokenize  # noqa: E402
 
 app.include_router(experiments.router, prefix="/api")
 app.include_router(metrics.router, prefix="/api")
 app.include_router(generate.router, prefix="/api")
 app.include_router(tokenize.router, prefix="/api")
+app.include_router(profile.router, prefix="/api")
 
 
 @app.get("/api/health")

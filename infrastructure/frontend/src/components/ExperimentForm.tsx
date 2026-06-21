@@ -11,15 +11,15 @@ const defaultValues: ExperimentCreate = {
   train_data_path: '',
   val_data_path: '',
   batch_size: 32,
-  max_iters: 10000,
+  max_iters: 5000,
   grad_clip_norm: 1.0,
   log_interval: 10,
   val_interval: 100,
   checkpoint_interval: 1000,
-  device: 'cpu',
+  device: 'mps',
   tokenizer_path: '',
   model: {
-    vocab_size: 32000,
+    vocab_size: 10000,
     context_length: 256,
     num_layers: 6,
     d_model: 512,
@@ -35,7 +35,7 @@ const defaultValues: ExperimentCreate = {
   },
   scheduler: {
     warmup_iters: 100,
-    cosine_cycle_iters: 10000,
+    cosine_cycle_iters: 5000,
     min_lr_ratio: 0.1,
   },
 };
@@ -61,13 +61,13 @@ export function ExperimentForm({ onSubmit, loading }: Props) {
 
   const set = (path: string[], value: unknown) => {
     setForm((prev) => {
-      const next = structuredClone(prev) as Record<string, unknown>;
+      const next = structuredClone(prev) as unknown as Record<string, unknown>;
       let cur = next;
       for (let i = 0; i < path.length - 1; i++) {
         cur = cur[path[i]] as Record<string, unknown>;
       }
       cur[path[path.length - 1]] = value;
-      return next as ExperimentCreate;
+      return next as unknown as ExperimentCreate;
     });
   };
 

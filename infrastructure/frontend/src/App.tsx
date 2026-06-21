@@ -4,6 +4,7 @@ import { ComparisonPage } from './pages/ComparisonPage';
 import { ExperimentDetailPage } from './pages/ExperimentDetailPage';
 import { ExperimentsPage } from './pages/ExperimentsPage';
 import { NewExperimentPage } from './pages/NewExperimentPage';
+import { ProfilerPage } from './pages/ProfilerPage';
 import { TokenizePage } from './pages/TokenizePage';
 
 const queryClient = new QueryClient({
@@ -37,6 +38,9 @@ function Nav() {
       <Link to="/tokenize" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 14 }}>
         Tokenize
       </Link>
+      <Link to="/profile" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 14 }}>
+        Profiler
+      </Link>
     </nav>
   );
 }
@@ -53,6 +57,7 @@ export default function App() {
             <Route path="/experiments/:id" element={<ExperimentDetailPage />} />
             <Route path="/compare" element={<ComparisonPage />} />
             <Route path="/tokenize" element={<TokenizePage />} />
+            <Route path="/profile" element={<ProfilerPage />} />
           </Routes>
         </main>
       </Router>

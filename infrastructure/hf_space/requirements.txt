@@ -1,0 +1,6 @@
+torch==2.6.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.0.0
+huggingface_hub>=0.23.0
+regex>=2024.11.6
